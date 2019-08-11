@@ -1,0 +1,12 @@
+name = oga_no
+description = Get the next available OGA No for a boat. Alter boat_node_form select options to override '-none'.
+version = 0.1
+package = Boat Register
+core = 7.x
+files[] = oga_no.module
+
+; Information added by drupal.org packaging script on 2014-02-26
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "boat register"
+datestamp = "1381053291"

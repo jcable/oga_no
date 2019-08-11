@@ -1,0 +1,91 @@
+<?php
+/*
+* Implements hook_form_alter()
+*/
+function oga_no_form_alter(&$form, &$form_state, $form_id)  {
+	if($form_id == "boat_node_form") {
+	
+/* Hide fields on the boat form */		
+		//$form['field_boat_oga_no']['#access'] = FALSE; //Disables the form element and hides it.
+		$form['field_boat_oga_no']['#disabled'] = TRUE;
+		$form['field_thcf']['#disabled'] = TRUE;
+		$form['field_make_boat_public']['#access'] = FALSE; //Disables the form element and hides it.
+		$form['field_draft_keel_up']['#access'] = FALSE; //Disables the form element and hides it.
+		$form['field_engine_power']['#access'] = FALSE; //Disables the form element and hides it.
+		
+		// Override '-none' for selected dropdowns here
+		$form['field_mainsail_type'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Mainsail type -');
+		$form['field_rig_type'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Rig type -');
+		$form['field_hull_type'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Hull type -');
+		$form['field_construction_material'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Construction material -');
+		$form['field_spar_material'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Spar material -');
+		
+		$form['field_home_country'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Home country -');
+		$form['field_moving_keel_type'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Moving keel type -');
+		$form['field_engine_position'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Engine status -');
+		$form['field_propellor_type'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Propeller type -');
+		$form['field_propellor_position'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Propeller position -');
+		$form['field_propellor_blades'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Propeller blades -');
+		$form['field_engine_date'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Engine date -');
+		$form['field_engine_fuel'][LANGUAGE_NONE]['#options']['_none'] = t('- Select Engine fuel -');
+		}
+			
+/* Hide fields on the Photo Comp entry form */			
+		global $user;
+		if ($form_id == "file_entity_edit") {
+		$form['filename']['#access'] = FALSE;
+		
+		// Set the role ID of the role that can edit.
+		$roles_allowed = array('administrator','Photo editor');
+		$user_roles = $user->roles;
+			 if (array_intersect($user_roles,$roles_allowed)) {
+		$form['field_award']['#disabled'] = FALSE;
+				} 
+		}else {
+		$form['field_award']['#disabled'] = TRUE;		
+			}
+}
+
+
+ /**
+ * Implements hook_node_update().
+ */
+ //
+function oga_no_node_update($node) {
+	if($node->type == "boat") {
+		//dsm('The hook_node_update() function was triggered with node id = '.$node->nid);
+		$boatid = $node->nid;
+		get_boat_no($boatid);
+	}
+}
+
+
+ /**
+ * Implements hook_node_insert().
+ */
+function oga_no_node_insert($node) {
+	if($node->type == "boat") {
+		//dsm('The hook_node_insert() function was triggered with node id = '.$node->nid);
+		$boatid = $node->nid;
+		get_boat_no($boatid);
+	}
+}
+
+//Call the stored procedure
+
+function get_boat_no($boatid) {
+//dsm('Function get_boat_no() was called');
+// Get the Drupal database connection and change the statement class to PDOStatement.
+// Save the current class for cleanup later.
+$conn = Database::getConnection();
+$saved_class = $conn->getAttribute(PDO::ATTR_STATEMENT_CLASS);
+$conn->setAttribute(PDO::ATTR_STATEMENT_CLASS, array('PDOStatement'));
+
+// Prepare the statement and bind params
+$statement = $conn->prepare("Call spnewboatno(?)");
+$op_status = $statement->bindParam(1, $boatid, PDO::PARAM_INT | PDO::PARAM_INPUT_OUTPUT);
+
+// Execute the statement and reset the connection's statement class to the original.
+$exec_result = $statement->execute();
+$conn->setAttribute(PDO::ATTR_STATEMENT_CLASS, $saved_class);
+}
